@@ -1,0 +1,57 @@
+version: '3'
+
+services:
+
+  ras-rabbit-adaptor-service:
+    container_name: rabbit-adaptor
+    image: sdcplatform/ras-rabbit-adaptor-service
+    ports:
+      - "8080:8080"
+    environment:
+      - CI_SECRETS=${CI_SECRETS}
+      - COLLEX_ID=${COLLEX_ID}
+      - RAS_CI_UPLOAD_URL=${RAS_CI_UPLOAD_URL}
+      - SECURITY_USER_NAME=${SECURITY_USER_NAME}
+      - SECURITY_USER_PASSWORD=${SECURITY_USER_PASSWORD}
+      - BASIC_AUTH=(SECURITY_USER_NAME, SECURITY_USER_PASSWORD)
+    networks:
+      - rasrmdockerdev_default
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/info"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+
+  sdx-seft-publisher-service:
+    container_name: seft-publisher
+    image: sdcplatform/sdx-seft-publisher-service
+    ports:
+      - "${sdx}:${sdx}" #CHANGE
+    environment:
+      - SEFT_FTP_USER=${SEFT_FTP_USER}
+      - SEFT_FTP_PASS=${SEFT_FTP_PASS}
+      - SEFT_FTP_HOST=${SEFT_FTP_HOST}
+      - SEFT_FTP_PORT=${SEFT_FTP_PORT}
+      - SEFT_PUBLISHER_FTP_FOLDER=${SEFT_PUBLISHER_FTP_FOLDER}
+    networks:
+      - rasrmdockerdev_default
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/info"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3.6.10-management
+    ports:
+      - "5369:4369"
+      - "45672:25672"
+      - "${EX_RABBIT_PORT}:5671-5672"
+      - "16671-16672:15671-15672"
+
+networks:
+   rasrmdockerdev_default:
+     external: true
