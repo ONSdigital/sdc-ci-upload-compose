@@ -4,7 +4,7 @@ services:
 
   ras-rabbit-adaptor-service:
     container_name: rabbit-adaptor
-    image: sdcplatform/ras-rabbit-adaptor-service
+    image: ras-rabbit-adaptor-service
     ports:
       - "8080:8080"
     environment:
@@ -25,9 +25,9 @@ services:
 
   sdx-seft-publisher-service:
     container_name: seft-publisher
-    image: sdcplatform/sdx-seft-publisher-service
+    image: sdx-seft-publisher-service
     ports:
-      - "${sdx}:${sdx}" #CHANGE
+      - "8086:8086"
     environment:
       - SEFT_FTP_USER=${SEFT_FTP_USER}
       - SEFT_FTP_PASS=${SEFT_FTP_PASS}
