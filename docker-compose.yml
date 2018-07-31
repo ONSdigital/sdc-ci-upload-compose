@@ -4,13 +4,12 @@ services:
 
   ras-rabbit-adaptor-service:
     container_name: rabbit-adaptor
-    image: ras-rabbit-adaptor-service
+    image: sdcplatform/ras-rabbit-adaptor-service
     ports:
       - "8080:8080"
     environment:
       - CI_SECRETS=${CI_SECRETS}
       - COLLEX_ID=${COLLEX_ID}
-      - RAS_CI_UPLOAD_URL=${RAS_CI_UPLOAD_URL}
       - SECURITY_USER_NAME=${SECURITY_USER_NAME}
       - SECURITY_USER_PASSWORD=${SECURITY_USER_PASSWORD}
       - BASIC_AUTH=(SECURITY_USER_NAME, SECURITY_USER_PASSWORD)
@@ -25,7 +24,7 @@ services:
 
   sdx-seft-publisher-service:
     container_name: seft-publisher
-    image: sdx-seft-publisher-service
+    image: sdcplatform/sdx-seft-publisher-service
     ports:
       - "8086:8086"
     environment:
@@ -33,7 +32,11 @@ services:
       - SEFT_FTP_PASS=${SEFT_FTP_PASS}
       - SEFT_FTP_HOST=${SEFT_FTP_HOST}
       - SEFT_FTP_PORT=${SEFT_FTP_PORT}
-      - SEFT_PUBLISHER_FTP_FOLDER=${SEFT_PUBLISHER_FTP_FOLDER}
+      - SEFT_RABBITMQ_HOST=${SEFT_RABBITMQ_HOST}
+      - SEFT_RABBITMQ_PORT=${SEFT_RABBITMQ_PORT}
+      - SEFT_RABBITMQ_DEFAULT_USER=guest
+      - SEFT_RABBITMQ_DEFAULT_PASS=guest
+
     networks:
       - rasrmdockerdev_default
     restart: always
@@ -51,6 +54,15 @@ services:
       - "45672:25672"
       - "${EX_RABBIT_PORT}:5671-5672"
       - "16671-16672:15671-15672"
+
+  sftp:
+    container_name: sftp
+    image: atmoz/sftp
+    volumes:
+        - ~/Documents/sftp:/home/centos/Documents/sftp
+    ports:
+        - "${EX_SFTP_PORT}:22"
+    command: centos:JLibV2&XD,:1001
 
 networks:
    rasrmdockerdev_default:
