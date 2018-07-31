@@ -4,13 +4,12 @@ Docker compose for services that allow uploading a SEFT CI to **Collection Instr
 # Overview
 Here is a flow diagram to demonstrate how a SEFT CI gets uploaded to the CI service from an FTP server:
 
-![SEFT CI Upload Diagram](./SEFT CI Upload Diagram.png "SEFT CI Upload Diagram")
+![SEFT CI Upload Diagram](seft-ci-upload-diagram.png "SEFT CI Upload Diagram")
 
 ### Start both services:
 
 **Please note**
-To truly use compose, you will need to have an FTP server running on your machine and also run CI service through the 
-docker-dev compose
+To use compose, you will need to run CI service through the docker-dev compose
 ```
 docker-compose up
 ```
