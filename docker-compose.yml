@@ -13,6 +13,10 @@ services:
       - SECURITY_USER_NAME=${SECURITY_USER_NAME}
       - SECURITY_USER_PASSWORD=${SECURITY_USER_PASSWORD}
       - BASIC_AUTH=(SECURITY_USER_NAME, SECURITY_USER_PASSWORD)
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
     networks:
       - rasrmdockerdev_default
     restart: always
@@ -54,6 +58,8 @@ services:
       - "45672:25672"
       - "${EX_RABBIT_PORT}:5671-5672"
       - "16671-16672:15671-15672"
+    networks:
+      - rasrmdockerdev_default
 
   sftp:
     container_name: sftp
@@ -63,6 +69,8 @@ services:
     ports:
         - "${EX_SFTP_PORT}:22"
     command: centos:JLibV2&XD,:1001
+    networks:
+      - rasrmdockerdev_default
 
 networks:
    rasrmdockerdev_default:
