@@ -4,7 +4,7 @@ services:
 
   ras-rabbit-adaptor-service:
     container_name: rabbit-adaptor
-    image: sdcplatform/ras-rabbit-adaptor-service
+    image: ras-rabbit-adaptor-service
     ports:
       - "8080:8080"
     environment:
@@ -28,18 +28,25 @@ services:
 
   sdx-seft-publisher-service:
     container_name: seft-publisher
-    image: sdcplatform/sdx-seft-publisher-service
+    image: sdx-seft-publisher-service
     ports:
       - "8086:8086"
     environment:
-      - SEFT_FTP_USER=${SEFT_FTP_USER}
-      - SEFT_FTP_PASS=${SEFT_FTP_PASS}
-      - SEFT_FTP_HOST=${SEFT_FTP_HOST}
-      - SEFT_FTP_PORT=${SEFT_FTP_PORT}
+      - SEFT_FTP_USER=user
+      - SEFT_FTP_PASS=pass
+      - SEFT_FTP_HOST=sftp
+      - SEFT_FTP_PORT=22
       - SEFT_RABBITMQ_HOST=${SEFT_RABBITMQ_HOST}
       - SEFT_RABBITMQ_PORT=${SEFT_RABBITMQ_PORT}
       - SEFT_RABBITMQ_DEFAULT_USER=guest
       - SEFT_RABBITMQ_DEFAULT_PASS=guest
+      - SEFT_PUBLISHER_FTP_FOLDER=${SEFT_PUBLISHER_FTP_FOLDER}
+      - SDX_SEFT_PUBLISHER_PORT=8086
+      - SEFT_FTP_INTERVAL_MS=1800000
+      - RAS_SEFT_PUBLISHER_PUBLIC_KEY=${RAS_SEFT_PUBLISHER_PUBLIC_KEY}
+      - SDX_SEFT_PUBLISHER_PRIVATE_KEY=${SDX_SEFT_PUBLISHER_PRIVATE_KEY}
+      - SEFT_RABBITMQ_MONITORING_USER=monitor
+      - SEFT_RABBITMQ_MONITORING_PASS=monitor
 
     networks:
       - rasrmdockerdev_default
@@ -65,13 +72,12 @@ services:
     container_name: sftp
     image: atmoz/sftp
     volumes:
-        - ~/Documents/sftp:/home/centos/Documents/sftp
+        - ~/Documents/ftp:/home/user/Documents/ftp
     ports:
-        - "${EX_SFTP_PORT}:22"
-    command: centos:JLibV2&XD,:1001
+        - "2222:22"
+    command: user:pass:1001
     networks:
       - rasrmdockerdev_default
-
 networks:
    rasrmdockerdev_default:
      external: true
