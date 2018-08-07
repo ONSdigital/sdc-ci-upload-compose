@@ -1,10 +1,9 @@
 version: '3'
 
 services:
-
   ras-rabbit-adaptor-service:
     container_name: rabbit-adaptor
-    image: ras-rabbit-adaptor-service
+    image: ras-rabbit-adaptor
     ports:
       - "8080:8080"
     environment:
@@ -13,10 +12,11 @@ services:
       - SECURITY_USER_NAME=${SECURITY_USER_NAME}
       - SECURITY_USER_PASSWORD=${SECURITY_USER_PASSWORD}
       - BASIC_AUTH=(SECURITY_USER_NAME, SECURITY_USER_PASSWORD)
-      - RABBITMQ_DEFAULT_USER=guest
-      - RABBITMQ_DEFAULT_PASS=guest
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
       - RABBITMQ_HOST=${RABBITMQ_HOST}
       - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - HOST=${HOST}
     networks:
       - rasrmdockerdev_default
     restart: always
@@ -32,16 +32,16 @@ services:
     ports:
       - "8086:8086"
     environment:
-      - SEFT_FTP_USER=user
-      - SEFT_FTP_PASS=pass
-      - SEFT_FTP_HOST=sftp
-      - SEFT_FTP_PORT=22
+      - SEFT_FTP_USER=${SEFT_FTP_USER}
+      - SEFT_FTP_PASS=${SEFT_FTP_PASS}
+      - SEFT_FTP_HOST=${SEFT_FTP_HOST}
+      - SEFT_FTP_PORT=${SEFT_FTP_PORT}
       - SEFT_RABBITMQ_HOST=${SEFT_RABBITMQ_HOST}
       - SEFT_RABBITMQ_PORT=${SEFT_RABBITMQ_PORT}
-      - SEFT_RABBITMQ_DEFAULT_USER=guest
-      - SEFT_RABBITMQ_DEFAULT_PASS=guest
+      - SEFT_RABBITMQ_DEFAULT_USER=${SEFT_RABBITMQ_DEFAULT_USER}
+      - SEFT_RABBITMQ_DEFAULT_PASS=${SEFT_RABBITMQ_DEFAULT_PASS}
       - SEFT_PUBLISHER_FTP_FOLDER=${SEFT_PUBLISHER_FTP_FOLDER}
-      - SDX_SEFT_PUBLISHER_PORT=8086
+      - SDX_SEFT_PUBLISHER_PORT=${SDX_SEFT_PUBLISHER_PORT}
       - SEFT_FTP_INTERVAL_MS=1800000
       - RAS_SEFT_PUBLISHER_PUBLIC_KEY=${RAS_SEFT_PUBLISHER_PUBLIC_KEY}
       - SDX_SEFT_PUBLISHER_PRIVATE_KEY=${SDX_SEFT_PUBLISHER_PRIVATE_KEY}
@@ -58,7 +58,7 @@ services:
       retries: 3
 
   rabbitmq:
-    container_name: rabbitmq
+    container_name: rabbitmq_for_upload
     image: rabbitmq:3.6.10-management
     ports:
       - "5369:4369"
@@ -68,16 +68,102 @@ services:
     networks:
       - rasrmdockerdev_default
 
-  sftp:
-    container_name: sftp
-    image: atmoz/sftp
+  ftp:
+    container_name: ftp
+    image: onsdigital/pure-ftpd
     volumes:
-        - ~/Documents/ftp:/home/user/Documents/ftp
+      - ./pure-ftp:/etc/pure-ftpd
+      - ~/Documents/ftp:/home/ftpusers/ons/ons
     ports:
-        - "2222:22"
-    command: user:pass:1001
+      - "2221:21"
+    environment:
+      - PUBLICHOST=ftp
     networks:
       - rasrmdockerdev_default
+
+  ons-postgres:
+    container_name: postgres
+    image: sdcplatform/ras-rm-docker-postgres
+    networks:
+      - rasrmdockerdev_default
+
+  collection-instrument-service:
+    container_name: collection-instrument
+    image: sdcplatform/ras-collection-instrument
+    ports:
+      - "${COLL_INST_PORT}:${COLL_INST_PORT}"
+    environment:
+      - DATABASE_URI=postgresql://${POSTGRES_USERNAME}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/postgres
+      - SECURITY_USER_NAME=${SECURITY_USER_NAME}
+      - SECURITY_USER_PASSWORD=${SECURITY_USER_PASSWORD}
+      - JSON_SECRET_KEYS=${JSON_SECRET_KEYS}
+      - ONS_CRYPTOKEY=somethingsecure
+      - RABBITMQ_AMQP_SURVEY_RESPONSE=amqp://guest:guest@${RABBIT_HOST}:${RABBIT_PORT}
+      - RABBITMQ_AMQP_COLLECTION_INSTRUMENT=amqp://guest:guest@${RABBIT_HOST}:${RABBIT_PORT}
+      - COLLECTION_EXERCISE_HOST=collex
+
+    networks:
+      - rasrmdockerdev_default
+    restart: always
+    links:
+      - ons-postgres
+
+  collectionexercise:
+    container_name: collex
+    image: sdcplatform/collectionexercisesvc
+    ports:
+      - "${COLLEX_PORT}:8145"
+      - "${COLLEX_DEBUG_PORT}:5145"
+      - "${COLLEX_MAN_PORT}:8245"
+    links:
+      - ons-postgres
+      - rabbitmq
+      - redis
+    environment:
+     - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:${POSTGRES_PORT}/${POSTGRES_HOST}?sslmode=disable
+     - LIQUIBASE_URL=jdbc:postgresql://postgres:${POSTGRES_PORT}/${POSTGRES_HOST}
+     - RABBITMQ_HOST=${RABBIT_HOST}
+     - RABBITMQ_PORT=${RABBIT_PORT}
+     - REDISSON_CONFIG_ADDRESS=${REDIS_HOST}:${REDIS_PORT}
+     - DATA_GRID_ADDRESS=${REDIS_HOST}:${REDIS_PORT}
+     - COLLECTION_INSTRUMENT_SVC_CONNECTION_CONFIG_HOST=${COLL_INST_HOST}
+     - COLLECTION_INSTRUMENT_SVC_CONNECTION_CONFIG_PORT=${COLL_INST_PORT}
+     - COLLECTION_INSTRUMENT_SVC_CONNECTION_CONFIG_USERNAME=${SECURITY_USER_NAME}
+     - COLLECTION_INSTRUMENT_SVC_CONNECTION_CONFIG_PASSWORD=${SECURITY_USER_PASSWORD}
+     - SCHEDULES_VALIDATION_SCHEDULE_DELAY_MILLI_SECONDS=1000
+     - SCHEDULES_DISTRIBUTION_SCHEDULE_DELAY_MILLI_SECONDS=1000
+     - JAVA_OPTS=-Xmx128m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=${COLLEX_DEBUG_PORT}
+     - LIQUIBASE_USER=${POSTGRES_USERNAME}
+     - LIQUIBASE_PASSWORD=${POSTGRES_PASSWORD}
+     - SPRING_DATASOURCE_USERNAME=${POSTGRES_USERNAME}
+     - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+    networks:
+      - rasrmdockerdev_default
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8145/info"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+  redis:
+    container_name: redis
+    image: redis:3.2.9
+    ports:
+      - "${EX_REDIS_PORT}:6379"
+    networks:
+      - rasrmdockerdev_default
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    ports:
+      - "80:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=ons@ons.gov
+      - PGADMIN_DEFAULT_PASSWORD=secret
+    links:
+      - ons-postgres
+    networks:
+      - rasrmdockerdev_default
+
 networks:
    rasrmdockerdev_default:
      external: true
