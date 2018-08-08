@@ -3,7 +3,7 @@ version: '3'
 services:
   ras-rabbit-adaptor-service:
     container_name: rabbit-adaptor
-    image: ras-rabbit-adaptor
+    image: sdcplatform/ras-rabbit-adaptor-service
     ports:
       - "8080:8080"
     environment:
@@ -17,6 +17,9 @@ services:
       - RABBITMQ_HOST=${RABBITMQ_HOST}
       - RABBITMQ_PORT=${RABBITMQ_PORT}
       - HOST=${HOST}
+      - RABBIT_EXCHANGE=${RABBIT_EXCHANGE}
+      - EXCHANGE_TYPE=${EXCHANGE_TYPE}
+      - RABBIT_QUEUE=${RABBIT_QUEUE}
     networks:
       - rasrmdockerdev_default
     restart: always
@@ -28,9 +31,9 @@ services:
 
   sdx-seft-publisher-service:
     container_name: seft-publisher
-    image: sdx-seft-publisher-service
+    image: sdcplatform/sdx-seft-publisher-service
     ports:
-      - "8086:8086"
+      - "8087:8087"
     environment:
       - SEFT_FTP_USER=${SEFT_FTP_USER}
       - SEFT_FTP_PASS=${SEFT_FTP_PASS}
