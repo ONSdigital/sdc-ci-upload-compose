@@ -22,6 +22,9 @@ services:
       - RABBIT_QUEUE=${RABBIT_QUEUE}
     networks:
       - rasrmdockerdev_default
+    links:
+      - collection-instrument-service
+      - collectionexercise
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/info"]
