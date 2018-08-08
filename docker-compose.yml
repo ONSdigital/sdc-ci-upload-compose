@@ -50,6 +50,9 @@ services:
       - SDX_SEFT_PUBLISHER_PRIVATE_KEY=${SDX_SEFT_PUBLISHER_PRIVATE_KEY}
       - SEFT_RABBITMQ_MONITORING_USER=monitor
       - SEFT_RABBITMQ_MONITORING_PASS=monitor
+    links:
+      - rabbitmq
+      - ftp
 
     networks:
       - rasrmdockerdev_default
