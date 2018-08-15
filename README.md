@@ -19,22 +19,16 @@ docker-compose up
 docker-compose down
 ```
 
-### How to run
-
-When running the docker-compose, you may encounter problems with keys that it uses in `ras-rabbit-adaptor.
-You may have to create a new set of keys and replace the current ones to get it to work.
-
+### Generating keys
+ 
+Test keys have been generated and stored in the `test_keys` folder, they were generated using:
 ```
-openssl genrsa -out sdc-sdx-inbound-encryption-private-v1.pem 4096
-openssl rsa -pubout -in sdc-sdx-inbound-encryption-private-v1.pem -out sdc-sdx-inbound-encryption-public-v1.pem
-openssl genrsa -out sdc-ras-authentication-signing-private-v1.pem 4096
-openssl rsa -pubout -in sdc-ras-authentication-signing-private-v1.pem -out sdc-ras-authentication-signing-public-v1.pem
-```
-These commands will help you generate new keys which you'll have to incorporate into the `CI_SECRETS`
-environment variable in `docker-compose.yml`
+openssl genrsa -out sdc-ras-seftupload-encryption-private-v1.pem 4096
+openssl rsa -pubout -in sdc-ras-seftupload-encryption-private-v1.pem -out sdc-ras-seftupload-encryption-public-v1.pem
 
-If that doesn't work you may have to edit the code in `ras-rabbit-adaptor` to turn off the decrypter
-that it uses.
+openssl genrsa -out sdc-sdx-seftupload-signing-private-v1.pem 4096
+openssl rsa -pubout -in sdc-sdx-seftupload-signing-private-v1.pem -out sdc-sdx-seftupload-signing-public-v1.pem
+```
 
 ### Use a specific tag for a service:
 
