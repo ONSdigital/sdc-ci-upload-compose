@@ -19,10 +19,22 @@ docker-compose up
 docker-compose down
 ```
 
+### Generating keys
+ 
+Test keys have been generated and stored in the `test_keys` folder, they were generated using:
+```
+openssl genrsa -out sdc-ras-seftupload-encryption-private-v1.pem 4096
+openssl rsa -pubout -in sdc-ras-seftupload-encryption-private-v1.pem -out sdc-ras-seftupload-encryption-public-v1.pem
+
+openssl genrsa -out sdc-sdx-seftupload-signing-private-v1.pem 4096
+openssl rsa -pubout -in sdc-sdx-seftupload-signing-private-v1.pem -out sdc-sdx-seftupload-signing-public-v1.pem
+```
+
 ### Use a specific tag for a service:
 
 If, for example, a specific branch from a PR is required for testing purposes,
 the `docker-compose.yml` file can be modified locally by appending a tag to an image name:
+
 ```
 image: sdcplatform/ras-rabbit-adaptor-service:<branch-name>
 ```
